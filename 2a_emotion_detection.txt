@@ -4,7 +4,6 @@ It calls IBM Watson NLP model to do emotion detection
 '''
 
 import requests
-import json
 
 def emotion_detector(text_to_analyse):
     '''
@@ -22,17 +21,5 @@ def emotion_detector(text_to_analyse):
     # Make a POST request to the API with the payload and headers
     response = requests.post(url, json = myobj, headers = headers)
 
-    # Parse the response from the API
-    formatted_response = json.loads(response.text)
-
-    # Get the dictionary stores emotion scores
-    emotions = formatted_response['emotionPredictions'][0]['emotion']
-
-    # Loop to find the dominant emotion and add to the emotion dictionary
-    for key in emotions.keys():
-        if emotions[key] == max(list(emotions.values())):
-            emotions['dominant_emotion'] = key
-            break
-
-    # Return the response, formatted as a dictionary
-    return emotions
+    # Return the response
+    return response.text
