@@ -1,38 +1,49 @@
 '''
-This module is for emotion detection
-It calls IBM Watson NLP model to do emotion detection
+Executing this function initiates the application of emotion detection
+to be executed over the Flask channel and deployed on localhost:5000.
 '''
 
-import requests
-import json
+# Import Flask, render_template, request from the flask pramework package
+from flask import Flask, request, render_template
 
-def emotion_detector(text_to_analyse):
+# Import the emotion_detector function from the package created
+from EmotionDetection.emotion_detection import emotion_detector
+
+# Initiate the flask app
+app = Flask(__name__)
+
+@app.route("/emotionDetector")
+def emo_detector():
+    ''' This code receives the text from the HTML interface and 
+        runs emotion detecton over it using emotion_detector() function.
+        The output returned shows the emotion probability
+        and the dominant emotion for the provided text.
     '''
-    This function uses the Emotion Predict function of the Watson NLP Library
+    # Send a GET request to the HTML interface to receive the input text,
+    # Store the incoming text to a variable text_to_analyze
+    text_to_analyze = request.args.get('textToAnalyze')
+
+    # Call sentiment_analyzer application with text_to_analyze as the argument
+    response = emotion_detector(text_to_analyze)
+
+    # Return formatted string
+    return f"For the given statement, the system response is "\
+           f"'anger': {response['anger']}, "\
+           f"'disgust': {response['disgust']}, "\
+           f"'fear': {response['fear']}, "\
+           f"'joy': {response['joy']} and "\
+           f"'sadness': {response['sadness']}. "\
+           f"The dominant emotion is {response['dominant_emotion']}."
+
+@app.route("/")
+def render_index_page():
+    ''' This function initiates the rendering of the main application
+        page over the Flask channel
     '''
-    # Define the URL for the sentiment analysis API
-    url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
+    # Run the render_template function on the HTML template
+    return render_template('index.html')
 
-    # Set the headers with the required model ID for the API
-    headers = {"grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"}
+if __name__ == "__main__":
 
-    # Create the payload with the text to be analyzed
-    myobj = { "raw_document": { "text": text_to_analyse } }
-
-    # Make a POST request to the API with the payload and headers
-    response = requests.post(url, json = myobj, headers = headers)
-
-    # Parse the response from the API
-    formatted_response = json.loads(response.text)
-
-    # Get the dictionary stores emotion scores
-    emotions = formatted_response['emotionPredictions'][0]['emotion']
-
-    # Loop to find the dominant emotion and add to the emotion dictionary
-    for key in emotions.keys():
-        if emotions[key] == max(list(emotions.values())):
-            emotions['dominant_emotion'] = key
-            break
-
-    # Return the response, formatted as a dictionary
-    return emotions
+    # Run the application on host: 0.0.0.0 (or localhost) on port number 5000
+    app.run(host = '0.0.0.0', port = 5000)
